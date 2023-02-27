@@ -21,12 +21,39 @@ pip install opencv-python matplotlib
 ### 1. Load image and convert to grayscale
 After loading images, we downsized histological images up to half their size and converted them to grayscale.
 
+Function for resizing images:
+```python
+def resize_img(img: cv2.Mat, scale_percent: int) -> cv2.Mat:
+    """
+    Resizing images.
+    :param: img - image
+    :param: scale_percent - percent by which the image is resized
+    :return: Resized image
+    """
+    # calculate the scale percent of original dimensions
+    width = int(img.shape[1] * scale_percent / 100)
+    height = int(img.shape[0] * scale_percent / 100)
+
+    # dsize
+    dsize = (width, height)
+
+    img_resize = cv2.resize(img, dsize)
+    return img_resize
+```
+
+Conversion to grayscale:
 ```python
 img1_grayscale = cv2.cvtColor(img1_resize, cv2.COLOR_BGR2GRAY)
 img2_grayscale = cv2.cvtColor(img2_resize, cv2.COLOR_BGR2GRAY)
 img3_grayscale = cv2.cvtColor(img3_resize, cv2.COLOR_BGR2GRAY)
 ```
 
+Original images:  
+<p align="center">
+	<img src="./outputs/images.png">
+</p>
+
+Grayscale images:  
 <p align="center">
 	<img src="./outputs/images_grayscale.png">
 </p>
