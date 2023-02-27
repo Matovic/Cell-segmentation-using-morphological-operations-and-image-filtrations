@@ -58,10 +58,81 @@ Grayscale images:
 	<img src="./outputs/images_grayscale.png">
 </p>
 
-### 2. Image pre-processing
+### 2. Image pre-processing  
+Noise removal with blurring image:  
+```python
+img1_blur = cv2.blur(img1_grayscale, (5,5))
+img1_gauss = cv2.GaussianBlur(img1_grayscale, (5,5), 0)
+img1_median = cv2.medianBlur(img1_grayscale, 5)
+img1_bilateral = cv2.bilateralFilter(img1_grayscale, 9, 75, 75)
+```
+
+<p align="center">
+	<img src="./outputs/blur.png">
+</p>
+
 
 ### 3. Binarization
+Binarization of image 1 using thresholding & inrage:  
+```python
+retValue, img1_threshold = cv2.threshold(img1_gauss, 127, 255, cv2.THRESH_BINARY)
+retValue, img1_otsu = cv2.threshold(img1_gauss, 0, 255, cv2.THRESH_OTSU)
+img1_adaptiveThreshold = cv2.adaptiveThreshold(img1_gauss, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 0)
+img1_inrange = cv2.inRange(img1_gauss, 127, 255)
+```
 
-### 4. Bubble segmentation
+<p align="center">
+	<img src="./outputs/binarization.png">
+</p>
+
+Binarization of image 1 using Sobel edge detection:  
+```python
+grad_x = cv2.Sobel(src=img1_gauss, ddepth=-1, dx=1, dy=0, ksize=3)
+grad_y = cv2.Sobel(src=img1_gauss, ddepth=-1, dx=0, dy=1, ksize=3)
+abs_grad_x = cv2.convertScaleAbs(grad_x)
+abs_grad_y = cv2.convertScaleAbs(grad_y)
+grad = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
+```
+
+Binarization of image 1 using Laplacian & Canny edge detection:  
+```python
+img1_laplac = cv2.Laplacian(src=img1_gauss, ddepth=-1, ksize=7)
+img1_canny = cv2.Canny(img1_gauss, 30, 100)
+```
+
+Compare edge detection with adaptive thresholding:
+<p align="center">
+	<img src="./outputs/edge_detection.png">
+</p>
+
+### 4. Cell segmentation
+Using morphological operations:
+```python
+img1_dilate = cv2.dilate(img1_canny,(-1, -1), 3)
+img1_erode = cv2.erode(img1_canny, kernel=(3,3))
+img1_distanceTransform = cv2.distanceTransform(src=img1_canny, distanceType=cv2.DIST_L2, maskSize=5)
+```
+
+<p align="center">
+	<img src="./outputs/1_morphological_op.png">
+</p>
+
+Contours analysis of image 1 using:
+```python
+img1_result = img1_resize.copy()
+img1_contours, img1_hierarchy = cv2.findContours(img1_dilate, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+cellIndex_img1 = 0
+
+for i in range(0, len(img1_contours)):
+   if cv2.contourArea(img1_contours[i]) > 10:
+      cellIndex_img1 += 1
+      cv2.drawContours(img1_result, img1_contours, i, (0, 255, 0), 4)
+   i += 1
+```
+
+<p align="center">
+	<img src="./outputs/1_cells.png">
+</p>
 
 ### Filtration
+
