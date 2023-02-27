@@ -1,6 +1,6 @@
 # binarization, morphological operations, image filtrations  
 Name: Erik Matovič  
-Methods used: list of important methods
+Methods used: resampling(resizing image), noise removal by blurring, thresholding, edge detection, morphological operations, contour analysis, filtration
 
 ## Assignment
 Load histology image from breast cancer dataset  - [image1](https://drive.google.com/file/d/15o6Dl25P6ern4JJkjArxpPdi8UPLcF6p/view), [image2](https://drive.google.com/file/d/1hHTTYJX6qyzY0BJbLQ21bx69Mj7LFrOv/view), [image3](https://drive.google.com/file/d/1UXCh_8nucjo5zA7-WqrJ_JNzmQkhO5am/view). 
@@ -61,19 +61,20 @@ Grayscale images:
 ### 2. Image pre-processing  
 Noise removal with blurring image:  
 ```python
-img1_blur = cv2.blur(img1_grayscale, (5,5))
-img1_gauss = cv2.GaussianBlur(img1_grayscale, (5,5), 0)
-img1_median = cv2.medianBlur(img1_grayscale, 5)
-img1_bilateral = cv2.bilateralFilter(img1_grayscale, 9, 75, 75)
+img_blur = cv2.blur(img_grayscale, (5,5))
+img_gauss = cv2.GaussianBlur(img_grayscale, (5,5), 0)
+img_median = cv2.medianBlur(img_grayscale, 5)
+img_bilateral = cv2.bilateralFilter(img_grayscale, 9, 75, 75)
 ```
 
 <p align="center">
-	<img src="./outputs/blur.png">
+	<img src="./outputs/1_blur.png">
+	<img src="./outputs/2_blur.png">
+	<img src="./outputs/3_blur.png">
 </p>
 
-
 ### 3. Binarization
-Binarization of image 1 using thresholding & inrage:  
+Binarization of image 1 using thresholding & inrage after gaussian blurring:  
 ```python
 retValue, img1_threshold = cv2.threshold(img1_gauss, 127, 255, cv2.THRESH_BINARY)
 retValue, img1_otsu = cv2.threshold(img1_gauss, 0, 255, cv2.THRESH_OTSU)
@@ -82,10 +83,10 @@ img1_inrange = cv2.inRange(img1_gauss, 127, 255)
 ```
 
 <p align="center">
-	<img src="./outputs/binarization.png">
+	<img src="./outputs/1_binarization.png">
 </p>
 
-Binarization of image 1 using Sobel edge detection:  
+Binarization of image 1 using Sobel edge detection after gaussian blurring:  
 ```python
 grad_x = cv2.Sobel(src=img1_gauss, ddepth=-1, dx=1, dy=0, ksize=3)
 grad_y = cv2.Sobel(src=img1_gauss, ddepth=-1, dx=0, dy=1, ksize=3)
@@ -94,19 +95,19 @@ abs_grad_y = cv2.convertScaleAbs(grad_y)
 grad = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
 ```
 
-Binarization of image 1 using Laplacian & Canny edge detection:  
+Binarization of image 1 using Laplacian & Canny edge detection after gaussian blurring:   
 ```python
 img1_laplac = cv2.Laplacian(src=img1_gauss, ddepth=-1, ksize=7)
 img1_canny = cv2.Canny(img1_gauss, 30, 100)
 ```
 
-Compare edge detection with adaptive thresholding:
+Compare edge detection with adaptive thresholding after gaussian blurring:
 <p align="center">
-	<img src="./outputs/edge_detection.png">
+	<img src="./outputs/1_edge_detection.png">
 </p>
 
 ### 4. Cell segmentation
-Using morphological operations:
+Using morphological operations after Canny Edge Detection:
 ```python
 img1_dilate = cv2.dilate(img1_canny,(-1, -1), 3)
 img1_erode = cv2.erode(img1_canny, kernel=(3,3))
@@ -117,22 +118,52 @@ img1_distanceTransform = cv2.distanceTransform(src=img1_canny, distanceType=cv2.
 	<img src="./outputs/1_morphological_op.png">
 </p>
 
-Contours analysis of image 1 using:
+Function for contour analysis:
 ```python
-img1_result = img1_resize.copy()
-img1_contours, img1_hierarchy = cv2.findContours(img1_dilate, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-cellIndex_img1 = 0
+def contours(img: cv2.Mat, img_input: cv2.Mat, mode: Any, method: int) -> Tuple[cv2.Mat, int]:
+    """
+    Countour analysis
+    :param: img - original image
+    :param: img_input - image after morphological operation
+    :param: mode - mode in cv2.findContours
+    :param: method - method in cv2.findContours
+    :returns: tuple of resulting image and number of cells
+    """
+    img_result = img.copy()
+    img_contours, img_hierarchy = cv2.findContours(img_input, mode, method)
+    cell_count = 0
 
-for i in range(0, len(img1_contours)):
-   if cv2.contourArea(img1_contours[i]) > 10:
-      cellIndex_img1 += 1
-      cv2.drawContours(img1_result, img1_contours, i, (0, 255, 0), 4)
-   i += 1
+    for i in range(0, len(img_contours)):
+        if cv2.contourArea(img_contours[i]) > 10:
+            cell_count += 1
+            cv2.drawContours(img_result, img_contours, i, (0, 255, 0), 4)
+        i += 1
+    return img_result, cell_count
 ```
 
+Contours analysis of image 1 after dilating binary image from Canny Edge Detection: 
 <p align="center">
 	<img src="./outputs/1_cells.png">
 </p>
 
+Contours analysis of image 2 after dilating binary image from Adaptive Threshold: 
+<p align="center">
+	<img src="./outputs/2_cells_dilate.png">
+</p>
+
+Contours analysis of image 2 after eroding binary image from Adaptive Threshold: 
+<p align="center">
+	<img src="./outputs/2_cells.png">
+</p>
+
+Contours analysis of image 3 after eroding binary image from Laplac edge detection: 
+<p align="center">
+	<img src="./outputs/3_cells.png">
+</p>
+
 ### Filtration
+TO DO
+
+## Conclusion  
+We have used three methods on three images. The first image used Gaussian blurring, Canny Edge Detection, and dilate operation for contour analysis. The second image used bilateral blurring, adaptive thresholding as binarization, and dilate/erode operation for contour analysis. Erode process showed more potential for segmentation because it segmented more cells. The third image used median blurring, Laplac edge detection, and erode operation for contour analysis.
 
