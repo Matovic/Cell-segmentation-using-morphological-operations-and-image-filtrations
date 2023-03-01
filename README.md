@@ -59,7 +59,7 @@ Grayscale images:
 </p>
 
 ### 2. Image pre-processing  
-Noise removal with blurring image:  
+Noise removal with blurring for 3 images:  
 ```python
 img_blur = cv2.blur(img_grayscale, (5,5))
 img_gauss = cv2.GaussianBlur(img_grayscale, (5,5), 0)
