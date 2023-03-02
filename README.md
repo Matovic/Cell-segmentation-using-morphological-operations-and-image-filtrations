@@ -153,24 +153,62 @@ img3_inrange = cv2.inRange(img3_median, 127, 255)
 	<img src="./outputs/3_binarization.png">
 </p>
 
-Binarization of image 1 using Sobel edge detection after gaussian blurring:  
+Binarization using Sobel edge detection:  
 ```python
+# img1
 grad_x = cv2.Sobel(src=img1_gauss, ddepth=-1, dx=1, dy=0, ksize=3)
 grad_y = cv2.Sobel(src=img1_gauss, ddepth=-1, dx=0, dy=1, ksize=3)
+
 abs_grad_x = cv2.convertScaleAbs(grad_x)
 abs_grad_y = cv2.convertScaleAbs(grad_y)
+
+# blending two images
 grad = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
+
+# img2
+img2_grad_x = cv2.Sobel(src=img2_bilateral, ddepth=-1, dx=1, dy=0, ksize=3)
+img2_grad_y = cv2.Sobel(src=img2_bilateral, ddepth=-1, dx=0, dy=1, ksize=3)
+
+img2_abs_grad_x = cv2.convertScaleAbs(img2_grad_x)
+img2_abs_grad_y = cv2.convertScaleAbs(img2_grad_y)
+
+img2_grad = cv2.addWeighted(img2_abs_grad_x, 0.5, img2_abs_grad_y, 0.5, 0)
+
+# img3
+img3_grad_x = cv2.Sobel(src=img3_median, ddepth=-1, dx=1, dy=0, ksize=3)
+img3_grad_y = cv2.Sobel(src=img3_median, ddepth=-1, dx=0, dy=1, ksize=3)
+
+img3_abs_grad_x = cv2.convertScaleAbs(img3_grad_x)
+img3_abs_grad_y = cv2.convertScaleAbs(img3_grad_y)
+
+img3_grad = cv2.addWeighted(img3_abs_grad_x, 0.5, img3_abs_grad_y, 0.5, 0)
 ```
 
-Binarization of image 1 using Laplacian & Canny edge detection after gaussian blurring:   
+Binarization using Laplacian & Canny edge detection:   
 ```python
 img1_laplac = cv2.Laplacian(src=img1_gauss, ddepth=-1, ksize=7)
 img1_canny = cv2.Canny(img1_gauss, 30, 100)
+
+img2_canny = cv2.Canny(img2_bilateral, 30, 100)
+img2_laplac = cv2.Laplacian(src=img2_bilateral, ddepth=-1, ksize=7)
+
+img3_laplac = cv2.Laplacian(src=img3_median, ddepth=-1, ksize=7)
+img3_canny = cv2.Canny(img3_median, 30, 100)
 ```
 
-Compare edge detection with adaptive thresholding after gaussian blurring:
+Compare edge detection with adaptive thresholding after gaussian blurring on image 1:
 <p align="center">
 	<img src="./outputs/1_edge_detection.png">
+</p>
+
+Compare edge detection with adaptive thresholding after bilateral blurring on image 2:
+<p align="center">
+	<img src="./outputs/2_edge_detection.png">
+</p>
+
+Compare edge detection with adaptive thresholding after median blurring on image 3:
+<p align="center">
+	<img src="./outputs/3_edge_detection.png">
 </p>
 
 ### 4. Cell segmentation
