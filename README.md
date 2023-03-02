@@ -1,6 +1,6 @@
-# binarization, morphological operations, image filtrations  
+# Cell segmentation using binarization, morphological operations, image filtrations  
 Name: Erik Matovič  
-Methods used: resampling(resizing image), noise removal by blurring, thresholding, edge detection, morphological operations, contour analysis, filtration
+Methods used: resampling(resizing image), noise removal by blurring, thresholding, edge detection, morphological operations, contour analysis, image filtration
 
 ## Assignment
 Load histology image from breast cancer dataset  - [image1](https://drive.google.com/file/d/15o6Dl25P6ern4JJkjArxpPdi8UPLcF6p/view), [image2](https://drive.google.com/file/d/1hHTTYJX6qyzY0BJbLQ21bx69Mj7LFrOv/view), [image3](https://drive.google.com/file/d/1UXCh_8nucjo5zA7-WqrJ_JNzmQkhO5am/view). 
@@ -9,7 +9,7 @@ Try to programmatically mark every cell and sum the total count. There are multi
 even if it is unsuccessful ([documentation example](https://sites.google.com/stuba.sk/vgg/computer-vision/solution-training-task?authuser=0)).
 Use [OpenCV documentation](https://docs.opencv.org/4.7.0/), below are some tips you may try.
 Optional Datasets: [Beer bubbles](https://drive.google.com/file/d/1jg_o5izpma-RUc8296SOjPau5ypruWnE/view), [red blood cells](https://drive.google.com/drive/folders/1FThJGItE_jSzne2LgcStj9Q4sLILPDWj)
-Choose at least 2 images (of your choice) for this Assignment !
+Choose at least 2 images (of your choice) for this Assignment
 
 ## Usage
 To run Jupyter Notebook, you need OpenCV and matplotlib. You can install them using pip:  
@@ -21,8 +21,18 @@ pip install opencv-python matplotlib
 ### 1. Load image and convert to grayscale
 After loading images, we downsized histological images up to half their size and converted them to grayscale.
 
-Function for resizing images:
+Function for resizing images and for displaying images:
 ```python
+def show_img(img: cv2.Mat, txt: str) -> None:
+    """
+    Show images
+    :param: img - image
+    :param: txt - text of a window
+    """
+    cv2.imshow(txt, img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    
 def resize_img(img: cv2.Mat, scale_percent: int) -> cv2.Mat:
     """
     Resizing images.
@@ -71,6 +81,36 @@ img_bilateral = cv2.bilateralFilter(img_grayscale, 9, 75, 75)
 	<img src="./outputs/1_blur.png">
 	<img src="./outputs/2_blur.png">
 	<img src="./outputs/3_blur.png">
+</p>
+
+Sharpening image with sharpening kernel defined from Laplacian kernel:
+
+```python
+# show original image
+show_img(img1_grayscale, 'img1 grayscale')
+
+# create a sharpening kernels
+sharpening_kernel1 = np.array([
+    [-1,-1,-1],
+    [-1, 9,-1],
+    [-1,-1,-1]
+])
+
+sharpening_kernel2 = np.array([
+    [0,-1, 0],
+    [-1,5,-1],
+    [0,-1, 0]
+])
+
+# convolution
+img1_sharpening1 = cv2.filter2D(img1_grayscale ,-1, sharpening_kernel1)
+img1_sharpening2 = cv2.filter2D(img1_grayscale ,-1, sharpening_kernel2)
+show_img(img1_sharpening1, 'img1_sharpening1')
+show_img(img1_sharpening2, 'img1_sharpening2')
+```
+
+<p align="center">
+	<img src="./outputs/1_sharpening.png">
 </p>
 
 ### 3. Binarization
