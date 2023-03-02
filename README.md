@@ -7,7 +7,7 @@ Load histology image from breast cancer dataset  - [image1](https://drive.google
 Eliminate noise and binarize the image using morphological operations and contour analysis. 
 Try to programmatically mark every cell and sum the total count. There are multiple solutions, use your imagination. Document each attempt, 
 even if it is unsuccessful ([documentation example](https://sites.google.com/stuba.sk/vgg/computer-vision/solution-training-task?authuser=0)).
-Use [OpenCV documentation](https://docs.opencv.org/4.7.0/), below are some tips you may try.
+Use [OpenCV documentation](https://docs.opencv.org/4.7.0/).
 Optional Datasets: [Beer bubbles](https://drive.google.com/file/d/1jg_o5izpma-RUc8296SOjPau5ypruWnE/view), [red blood cells](https://drive.google.com/drive/folders/1FThJGItE_jSzne2LgcStj9Q4sLILPDWj)
 Choose at least 2 images (of your choice) for this Assignment
 
@@ -115,6 +115,7 @@ show_img(img1_sharpening2, 'img1_sharpening2')
 
 ### 3. Binarization
 Binarization of image 1 using thresholding & inrage after gaussian blurring:  
+
 ```python
 retValue, img1_threshold = cv2.threshold(img1_gauss, 127, 255, cv2.THRESH_BINARY)
 retValue, img1_otsu = cv2.threshold(img1_gauss, 0, 255, cv2.THRESH_OTSU)
@@ -124,6 +125,32 @@ img1_inrange = cv2.inRange(img1_gauss, 127, 255)
 
 <p align="center">
 	<img src="./outputs/1_binarization.png">
+</p>
+
+Binarization of image 2 using thresholding & inrage after bilateral blurring: 
+ 
+```python
+retValue, img2_threshold = cv2.threshold(img2_bilateral, 127, 255, cv2.THRESH_BINARY)
+retValue, img2_otsu = cv2.threshold(img2_bilateral, 0, 255, cv2.THRESH_OTSU)
+img2_adaptiveThreshold = cv2.adaptiveThreshold(img2_bilateral, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 0)
+img2_inrange = cv2.inRange(img2_bilateral, 127, 255)
+```
+
+<p align="center">
+	<img src="./outputs/2_binarization.png">
+</p>
+
+Binarization of image 3 using thresholding & inrage after median blurring: 
+ 
+```python
+retValue, img3_threshold = cv2.threshold(img3_median, 127, 255, cv2.THRESH_BINARY)
+retValue, img3_otsu = cv2.threshold(img3_median, 0, 255, cv2.THRESH_OTSU)
+img3_adaptiveThreshold = cv2.adaptiveThreshold(img3_median, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 0)
+img3_inrange = cv2.inRange(img3_median, 127, 255)
+```
+
+<p align="center">
+	<img src="./outputs/3_binarization.png">
 </p>
 
 Binarization of image 1 using Sobel edge detection after gaussian blurring:  
