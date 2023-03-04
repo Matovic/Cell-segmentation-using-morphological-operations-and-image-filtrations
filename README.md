@@ -409,7 +409,7 @@ Contours analysis of image 1 after inverting dilated binary image from Canny Edg
 
 Contours analysis of image 1 after dilating normalized image from distance transform and Canny Edge Detection and sharpening with a kernel of 8-neighbours: 
 <p align="center">
-	<img src="./outputs/1_cells_sharp8_distance transform.png">
+	<img src="./outputs/1_cells_sharp8_distance_transform.png">
 </p>
 
 Contours analysis of image 1 after closing image from Canny Edge Detection and Gauss blurring: 
