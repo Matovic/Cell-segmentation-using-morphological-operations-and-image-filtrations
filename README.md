@@ -1,6 +1,6 @@
 # Cell segmentation using binarization, morphological operations, image filtrations  
 Name: Erik Matovič  
-Methods used: resampling(resizing image), noise removal by blurring, thresholding, edge detection, morphological operations, contour analysis, image filtration
+Methods used: resampling(resizing image), noise removal by blurring(averaging, median, Gaussian and bilateral), thresholding(binary, otsu, adaptive, inrange), edge detection(Sobel, Laplacian, Canny), morphological operations(dilate, erode, closing, opening, distance transform, top hat, black hat, morphological gradient), inverting images, convolution, contour analysis, image filtration
 
 ## Assignment
 Load histology image from breast cancer dataset  - [image1](https://drive.google.com/file/d/15o6Dl25P6ern4JJkjArxpPdi8UPLcF6p/view), [image2](https://drive.google.com/file/d/1hHTTYJX6qyzY0BJbLQ21bx69Mj7LFrOv/view), [image3](https://drive.google.com/file/d/1UXCh_8nucjo5zA7-WqrJ_JNzmQkhO5am/view). 
@@ -459,7 +459,7 @@ Contours analysis of image 2 after Adaptive Threshold and bilateral blurring(wit
 
 Contours analysis of image 2 after dilateting normalized distance transform binary image from Adaptive Threshold and bilateral blurring: 
 <p align="center">
-	<img src="./outputs/2_cells_bilateral_distance transform.png">
+	<img src="./outputs/2_cells_bilateral_distance_transform.png">
 </p>
 
 Contours analysis of image 3 after eroding binary image from Laplac edge detection and median blurring: 
@@ -483,7 +483,7 @@ Contours analysis of image 3 after dilateting normalized image from distance tra
 </p>
 
 ## Conclusion  
-We have used three methods on three images. The first image used Gaussian blurring, Canny Edge Detection, and dilate operation for contour analysis. The second image used bilateral blurring, adaptive thresholding as binarization, and dilate/erode operation for contour analysis. Erode process showed more potential for segmentation because it segmented more cells. The third image used median blurring, Laplac edge detection, and erode operation for contour analysis.
+We have used three methods on three images. The first image used Gaussian blurring, Canny Edge Detection to get binary image and we have used multiple morphological operations(dilate, erode, morphological gradient, tophat, blackhat, opening, closing, inverting images and so on) and convolution for contour analysis. The first image also used sharpening instead of a blurring. The second image used bilateral blurring, adaptive thresholding as binarization, and dilate/erode operation for contour analysis. Erode process showed more potential for segmentation because it segmented more cells. The third image used median blurring, Laplac edge detection, and erode operation for contour analysis.  
 
 Based on previous experiments we can conclude that contours analysis shows nothing on image 1 after eroding, inverted closing, opening, inverted opening, inverted mask of canny and tophat.
 
