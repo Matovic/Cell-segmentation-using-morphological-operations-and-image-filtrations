@@ -212,15 +212,110 @@ Compare edge detection with adaptive thresholding after median blurring on image
 </p>
 
 ### 4. Cell segmentation
-Using morphological operations after Canny Edge Detection:
+Using morphological operations(dilate, erode, structuring element, distance transform, Morphological Gradient, top hat, black hat) and convolution after Canny Edge Detection after Gauss blurring or sharpening:
 ```python
+element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
+
 img1_dilate = cv2.dilate(img1_canny,(-1, -1), 3)
+
+img1_dilate_inverted = cv2.bitwise_not(img1_dilate)
+
+img1_dilate_element = cv2.dilate(img1_canny, element, 3)
+
+img1_dilate_inverted_element = cv2.bitwise_not(img1_dilate_element)
+
+img1_sharp1_dilate_element = cv2.dilate(img1_sharp1_canny, element, 3)
+
+img1_sharp2_dilate_element = cv2.dilate(img1_sharp2_canny, element, 3)
+
+img1_sharp1_dilate_element_inverted = cv2.bitwise_not(img1_sharp1_dilate_element)´
+
+img1_sharp2_dilate_element_inverted = cv2.bitwise_not(img1_sharp2_dilate_element)
+
 img1_erode = cv2.erode(img1_canny, kernel=(3,3))
-img1_distanceTransform = cv2.distanceTransform(src=img1_canny, distanceType=cv2.DIST_L2, maskSize=5)
+
+img1_closing = cv2.morphologyEx(img1_canny, cv2.MORPH_CLOSE, element)
+
+img1_closing_inverted = cv2.bitwise_not(img1_closing)
+
+img1_opening = cv2.morphologyEx(img1_canny, cv2.MORPH_OPEN, element)
+
+img1_opening_inverted = cv2.bitwise_not(img1_opening)
+
+img1_canny_inverted = cv2.bitwise_not(img1_canny)
+
+img1_closing_canny_inverted = cv2.morphologyEx(img1_canny_inverted, cv2.MORPH_CLOSE, element)
+
+img1_opening_canny_inverted = cv2.morphologyEx(img1_canny_inverted, cv2.MORPH_OPEN, element)
+
+element2 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
+
+img1_gradient = cv2.morphologyEx(img1_canny, cv2.MORPH_GRADIENT, element2)
+
+img1_tophat = cv2.morphologyEx(img1_canny, cv2.MORPH_TOPHAT, (7,7))
+
+img1_blackhat = cv2.morphologyEx(img1_canny, cv2.MORPH_BLACKHAT, element)
+
+img1_conv = cv2.filter2D(img1_canny, -1, element)
+
+img1_conv_inverted = cv2.bitwise_not(img1_conv)
+```
+
+Declared function for distance transform with normalization and dilatation:
+```python
+def distance_transform(img: cv2.Mat) -> cv2.Mat:
+    """
+    Preform distance_transform.
+    :param: img - binary image
+    :returns: image after distance transform
+    """
+    img_distanceTransform = cv2.distanceTransform(src=img, distanceType=cv2.DIST_L2, maskSize=5)
+    show_img(img_distanceTransform, 'img_distanceTransform')
+
+    # Normalize the distance image for range = {0.0, 1.0} so we can visualize and threshold it
+    cv2.normalize(img_distanceTransform, img_distanceTransform, 0, 1.0, cv2.NORM_MINMAX)
+    show_img(img_distanceTransform, 'img_distanceTransform normalized')
+
+    # Threshold to obtain the peaks. This will be the markers for the foreground objects
+    _, img_distanceTransform = cv2.threshold(img_distanceTransform, 0.4, 1.0, cv2.THRESH_BINARY)
+
+    # Dilate the dist image
+    kernel1 = np.ones((3,3), dtype=np.uint8)
+    img_distanceTransform = cv2.dilate(img_distanceTransform, kernel1)
+    show_img(img_distanceTransform, 'img_dist dilate')
+
+    return img_distanceTransform
 ```
 
 <p align="center">
 	<img src="./outputs/1_morphological_op.png">
+	<img src="./outputs/1_dilate_sharp.png">
+	<img src="./outputs/1_erode.png">
+	<img src="./outputs/1_opening_closing.png">
+	<img src="./outputs/1_morphological_op_compare.png">
+</p>
+
+Using morphological operations(dilate, erode, structuring element, distance transform, Morphological Gradient, top hat, black hat) and convolution on image 2 after Adaptive Threshold and bilateral blurring and on image 3 after Laplacian edge detection and median blurring:
+
+```python
+# img2
+img2_dilate = cv2.dilate(img2_adaptiveThreshold,(-1, -1), 3)
+
+img2_distanceTransform = cv2.distanceTransform(src=img2_adaptiveThreshold, distanceType=cv2.DIST_L2, maskSize=5)
+
+img2_erode	= cv2.erode(img2_adaptiveThreshold, kernel=(3,3))
+
+# img3
+img3_dilate = cv2.dilate(img3_laplac,(-1, -1), 3)
+
+img3_distanceTransform = cv2.distanceTransform(src=img3_laplac, distanceType=cv2.DIST_L2, maskSize=5)
+
+img3_erode	= cv2.erode(img3_laplac, kernel=(3,3))
+```
+
+<p align="center">
+	<img src="./outputs/2_morphological_op.png">
+	<img src="./outputs/3_morphological_op.png">
 </p>
 
 Function for contour analysis:
@@ -246,29 +341,149 @@ def contours(img: cv2.Mat, img_input: cv2.Mat, mode: Any, method: int) -> Tuple[
     return img_result, cell_count
 ```
 
-Contours analysis of image 1 after dilating binary image from Canny Edge Detection: 
+Function for displaying segmentated cells:
+```python
+def show_cells(img: cv2.Mat, img_result: cv2.Mat, no_cells: int) -> None:
+    """
+    Show original image and segmentated cells.
+    :param: img - original image
+    :param: img_result - segmentated image
+    :param: cells - number of cells in image
+    """
+    plt.figure()
+    f, axarr = plt.subplots(1,2)
+
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img_result_rgb = cv2.cvtColor(img_result, cv2.COLOR_BGR2RGB)
+
+    axarr[0].imshow(img_rgb)
+    axarr[1].imshow(img_result_rgb)
+
+    axarr[0].set_title('Original image')
+    axarr[1].set_title(f'Cell segmentation - {no_cells} cells')
+
+    axarr[0].axis('off')
+    axarr[1].axis('off')
+
+    plt.show()
+```
+Contours analysis of image 1 after dilating binary image from Canny Edge Detection and Gauss blurring: 
 <p align="center">
-	<img src="./outputs/1_cells.png">
+	<img src="./outputs/1_cells_gauss_canny_dilate.png">
 </p>
 
-Contours analysis of image 2 after dilating binary image from Adaptive Threshold: 
+Contours analysis of image 1 after dilating binary image with structuring element from Canny Edge Detection and Gauss blurring: 
+<p align="center">
+	<img src="./outputs/1_cells_gauss_canny_dilate_structuring_element.png">
+</p>
+
+Contours analysis of image 1 after inverting dilated binary image from Canny Edge Detection and Gauss blurring: 
+<p align="center">
+	<img src="./outputs/1_cells_gauss_canny_dilate_structuring_element_inverted.png">
+</p>
+
+Contours analysis of image 1 after inverting dilated(with structuring element) binary image from Canny Edge Detection and Gauss blurring: 
+<p align="center">
+	<img src="./outputs/1_cells_gauss_canny_dilate_structuring_element_inverted.png">
+</p>
+
+Contours analysis of image 1 after dilating binary image from Canny Edge Detection and sharpening with a kernel of 4-neighbours: 
+<p align="center">
+	<img src="./outputs/1_cells_sharp4_canny_dilate.png">
+</p>
+
+Contours analysis of image 1 after dilating binary image from Canny Edge Detection and sharpening with a kernel of 8-neighbours: 
+<p align="center">
+	<img src="./outputs/1_cells_sharp8_canny_dilate.png">
+</p>
+
+Contours analysis of image 1 after inverting dilated binary image from Canny Edge Detection and sharpening with a kernel of 4-neighbours: 
+<p align="center">
+	<img src="./outputs/1_cells_sharp4_canny_dilate_inverted.png">
+</p>
+
+Contours analysis of image 1 after inverting dilated binary image from Canny Edge Detection and sharpening with a kernel of 8-neighbours: 
+<p align="center">
+	<img src="./outputs/1_cells_sharp8_canny_dilate_inverted.png">
+</p>
+
+Contours analysis of image 1 after dilating normalized image from distance transform and Canny Edge Detection and sharpening with a kernel of 8-neighbours: 
+<p align="center">
+	<img src="./outputs/1_cells_sharp8_distance transform.png">
+</p>
+
+Contours analysis of image 1 after closing image from Canny Edge Detection and Gauss blurring: 
+<p align="center">
+	<img src="./outputs/1_cells_gauss_canny_closing.png">
+</p>
+
+Contours analysis of image 1 after Canny Edge Detection and Gauss blurring (without morphological operations): 
+<p align="center">
+	<img src="./outputs/1_cells_gauss_canny.png">
+</p>
+
+Contours analysis of image 1 after Morphological Gradient from Canny Edge Detection and Gauss blurring: 
+<p align="center">
+	<img src="./outputs/1_cells_gauss_canny_gradient.png">
+</p>
+
+Contours analysis of image 1 after blackhat from Canny Edge Detection and Gauss blurring: 
+<p align="center">
+	<img src="./outputs/1_cells_gauss_canny_blackhat.png">
+</p>
+
+Contours analysis of image 1 after convolution from Canny Edge Detection and Gauss blurring: 
+<p align="center">
+	<img src="./outputs/1_cells_gauss_canny_conv.png">
+</p>
+
+Contours analysis of image 1 after inverting convolution from Canny Edge Detection and Gauss blurring: 
+<p align="center">
+	<img src="./outputs/1_cells_gauss_canny_conv_inverted.png">
+</p>
+
+Contours analysis of image 2 after dilating binary image from Adaptive Threshold and bilateral blurring: 
 <p align="center">
 	<img src="./outputs/2_cells_dilate.png">
 </p>
 
-Contours analysis of image 2 after eroding binary image from Adaptive Threshold: 
+Contours analysis of image 2 after eroding binary image from Adaptive Threshold and bilateral blurring: 
 <p align="center">
 	<img src="./outputs/2_cells.png">
 </p>
 
-Contours analysis of image 3 after eroding binary image from Laplac edge detection: 
+Contours analysis of image 2 after Adaptive Threshold and bilateral blurring(without morphological operations): 
+<p align="center">
+	<img src="./outputs/2_cells_bilateral_adaptive.png">
+</p>
+
+Contours analysis of image 2 after dilateting normalized distance transform binary image from Adaptive Threshold and bilateral blurring: 
+<p align="center">
+	<img src="./outputs/2_cells_bilateral_distance transform.png">
+</p>
+
+Contours analysis of image 3 after eroding binary image from Laplac edge detection and median blurring: 
 <p align="center">
 	<img src="./outputs/3_cells.png">
 </p>
 
-### Filtration
-TO DO
+Contours analysis of image 3 after Laplacian Edge Detection and median blurring(no morphological operations): 
+<p align="center">
+	<img src="./outputs/3_cells_median_laplac.png">
+</p>
+
+Contours analysis of image 3 after dilateting image from Laplacian Edge Detection and median blurring(no morphological operations): 
+<p align="center">
+	<img src="./outputs/3_cells_median_laplac_dilate.png">
+</p>
+
+Contours analysis of image 3 after dilateting normalized image from distance transform from Laplacian Edge Detection and median blurring(no morphological operations): 
+<p align="center">
+	<img src="./outputs/3_cells_median_laplac_distance_transform.png">
+</p>
 
 ## Conclusion  
 We have used three methods on three images. The first image used Gaussian blurring, Canny Edge Detection, and dilate operation for contour analysis. The second image used bilateral blurring, adaptive thresholding as binarization, and dilate/erode operation for contour analysis. Erode process showed more potential for segmentation because it segmented more cells. The third image used median blurring, Laplac edge detection, and erode operation for contour analysis.
+
+Based on previous experiments we can conclude that contours analysis shows nothing on image 1 after eroding, inverted closing, opening, inverted opening, inverted mask of canny and tophat.
 
